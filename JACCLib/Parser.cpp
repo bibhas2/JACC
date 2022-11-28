@@ -179,10 +179,44 @@ namespace jacc {
 	}
 
 	JSONObject Parser::parse_bool() {
-		return JSONObject();
+		read_value_token();
+
+		if (error_code != jacc::ERROR_NONE) {
+			return JSONObject();
+		}
+
+		if (value_token == "true") {
+			return JSONObject(true);
+		} 
+		else if (value_token == "false") {
+			return JSONObject(false);
+		}
+		else {
+			save_error(ERROR_SYNTAX, "Invalid boolean value.");
+
+			return JSONObject();
+		}
 	}
+
 	JSONObject Parser::parse_null() {
-		return JSONObject();
+		read_value_token();
+
+		if (error_code != jacc::ERROR_NONE) {
+			return JSONObject();
+		}
+
+		if (value_token == "null") {
+			JSONObject o;
+
+			o.type = jacc::JSON_NULL;
+
+			return o;
+		}
+		else {
+			save_error(ERROR_SYNTAX, "Invalid null value.");
+
+			return JSONObject();
+		}
 	}
 
 	JSONObject Parser::parse_array() {

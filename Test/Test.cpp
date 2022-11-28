@@ -120,6 +120,34 @@ void test_num_array() {
     assert(p.root.array.size() == 4);
     assert(p.root.array[3].type == jacc::JSON_NUMBER);
     assert(number_equals(4.44, p.root.array[3].number));
+    assert(number_equals(-10.0, p.root.array[2].number));
+}
+
+void test_bool_array() {
+    const char* json = "[true, false, true, false, false]";
+    jacc::Parser p;
+
+    p.parse(json);
+
+    assert(p.error_code == jacc::ERROR_NONE);
+    assert(p.root.type == jacc::JSON_ARRAY);
+    assert(p.root.array.size() == 5);
+    assert(p.root.array[3].type == jacc::JSON_BOOLEAN);
+    assert(p.root.array[3].booleanValue == false);
+    assert(p.root.array[2].booleanValue == true);
+}
+
+void test_null_array() {
+    const char* json = "[true, null, true, false, null]";
+    jacc::Parser p;
+
+    p.parse(json);
+
+    assert(p.error_code == jacc::ERROR_NONE);
+    assert(p.root.type == jacc::JSON_ARRAY);
+    assert(p.root.array.size() == 5);
+    assert(p.root.array[1].type == jacc::JSON_NULL);
+    assert(p.root.array[4].type == jacc::JSON_NULL);
 }
 
 int main()
@@ -130,4 +158,6 @@ int main()
     test_move();
     test_peek();
     test_num_array();
+    test_bool_array();
+    test_null_array();
 }
