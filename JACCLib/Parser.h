@@ -55,14 +55,24 @@ namespace jacc {
 		ErrorCode error_code = ERROR_NONE;
 		const char* error_message = nullptr;
 		JSONObject root;
+		std::string value_token;
 
+		Parser();
 		char peek();
 		char pop();
 		void putback();
 		void eat_space();
+		void read_value_token();
 
 		void save_error(ErrorCode code, const char* msg);
 		void parse(std::string_view source);
+		JSONObject parse_value();
+		JSONObject parse_array();
+		JSONObject parse_string();
+		JSONObject parse_object();
+		JSONObject parse_number();
+		JSONObject parse_bool();
+		JSONObject parse_null();
 	};
 }
 

@@ -1,7 +1,13 @@
 #include <iostream>
 #include <Parser.h>
 #include <assert.h>
+#include <cmath>
+
 #include "Test.h"
+
+bool number_equals(double n1, double n2) {
+    return fabs(n1 - n2) < 0.0001;
+}
 
 void test_peek()
 {
@@ -103,6 +109,19 @@ void test_array_ctor() {
     assert(o3.array[1].object["customer_name"].str == "Daffy Duck");
 }
 
+void test_num_array() {
+    const char* json = "[1.11, 3, -10, 4.44]";
+    jacc::Parser p;
+
+    p.parse(json);
+
+    assert(p.error_code == jacc::ERROR_NONE);
+    assert(p.root.type == jacc::JSON_ARRAY);
+    assert(p.root.array.size() == 4);
+    assert(p.root.array[3].type == jacc::JSON_NUMBER);
+    assert(number_equals(4.44, p.root.array[3].number));
+}
+
 int main()
 {
     test_str_ctor();
@@ -110,4 +129,5 @@ int main()
     test_array_ctor();
     test_move();
     test_peek();
+    test_num_array();
 }
