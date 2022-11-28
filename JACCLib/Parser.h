@@ -50,6 +50,7 @@ namespace jacc {
 		size_t location = 0;
 		ErrorCode error_code = ERROR_NONE;
 		const char* error_message = nullptr;
+		JSONObject root;
 
 		char peek();
 		char pop();

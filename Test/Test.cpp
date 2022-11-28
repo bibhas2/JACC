@@ -28,7 +28,27 @@ void test_str_ctor() {
 }
 
 void test_move() {
+    std::map<std::string_view, jacc::JSONObject> map1;
 
+    map1.emplace("customer_id", jacc::JSONObject(1001.));
+    map1.emplace("customer_name", jacc::JSONObject(std::string_view("Bugs Bunny")));
+
+    jacc::JSONObject o1(map1);
+    jacc::JSONObject o2(std::move(o1));
+
+    assert(o1.type == jacc::JSON_UNDEFINED);
+    assert(o2.type == jacc::JSON_OBJECT);
+    assert(o2.object["customer_name"].str == "Bugs Bunny");
+
+    jacc::JSONObject o3;
+
+    assert(o3.type == jacc::JSON_UNDEFINED);
+
+    o3 = std::move(o2);
+
+    assert(o2.type == jacc::JSON_UNDEFINED);
+    assert(o3.type == jacc::JSON_OBJECT);
+    assert(o3.object["customer_name"].str == "Bugs Bunny");
 }
 
 void test_map_ctor() {
@@ -61,5 +81,6 @@ int main()
 {
     test_str_ctor();
     test_map_ctor();
+    test_move();
     test_peek();
 }
