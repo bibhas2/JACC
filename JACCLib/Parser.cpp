@@ -6,11 +6,11 @@ namespace jacc {
 
 	}
 
-	JSONObject::JSONObject(const std::string_view& s) : str(s), type(JSON_STRING) {
+	JSONObject::JSONObject(const std::string& s) : str(std::move(s)), type(JSON_STRING) {
 
 	}
 
-	JSONObject::JSONObject(std::map<std::string_view, JSONObject>& o) : object(std::move(o)), type(JSON_OBJECT) {
+	JSONObject::JSONObject(std::map<std::string, JSONObject>& o) : object(std::move(o)), type(JSON_OBJECT) {
 
 	}
 
@@ -104,7 +104,7 @@ namespace jacc {
 		char ch = peek();
 
 		if (ch == '{') {
-			//parser->root = parseObject(parser);
+			root = parse_object();
 		}
 		else if (ch == '[') {
 			root = parse_array();
@@ -176,6 +176,21 @@ namespace jacc {
 	}
 
 	JSONObject Parser::parse_string() {
+		std::string s;
+
+		s.reserve(25);
+
+		read_quoted_string(s);
+
+		if (error_code != jacc::ERROR_NONE) {
+			return JSONObject();
+		}
+		else {
+			return JSONObject(s);
+		}
+	}
+
+	void Parser::read_quoted_string(std::string& s) {
 		eat_space();
 
 		char ch = pop();
@@ -183,16 +198,21 @@ namespace jacc {
 		if (ch == 0) {
 			save_error(ERROR_SYNTAX, "Premature end of document while parsing string.");
 
-			return JSONObject();
+			return;
+		}
+		else if (ch != '"') {
+			save_error(ERROR_SYNTAX, "String does not start with \".");
+
+			return;
 		}
 
-		JSONObject result;
+		s.clear();
 
 		while ((ch = pop()) != '"') {
 			if (ch == 0) {
 				save_error(ERROR_SYNTAX, "Premature end of document while parsing string.");
-				
-				return JSONObject();
+
+				return;
 			}
 
 			if (ch == '\\') {
@@ -203,7 +223,7 @@ namespace jacc {
 				if (escaped == 0) {
 					save_error(ERROR_SYNTAX, "Invalid escaped character in string.");
 
-					return JSONObject();
+					return;
 				}
 
 				if (escaped == 't') {
@@ -245,28 +265,82 @@ namespace jacc {
 
 					if (bytes_written == 0) {
 						save_error(ERROR_SYNTAX, "Failed to convert UNICODE to UTF-8.");
-						
-						return JSONObject();
+
+						return;
 					}
 
 					for (int i = 0; i < bytes_written; ++i) {
-						result.str.push_back(out[i]);
+						s.push_back(out[i]);
 					}
 
 					continue;
 				}
 			}
 
-			result.str.push_back(ch);
+			s.push_back(ch);
 		}
-
-		result.type = jacc::JSON_STRING;
-
-		return result;
 	}
 
 	JSONObject Parser::parse_object() {
-		return JSONObject();
+		char ch = pop();
+
+		if (ch == 0) {
+			save_error(ERROR_SYNTAX, "Premature end of document while parsing string.");
+
+			return JSONObject();
+		}
+		if (ch != '{') {
+			save_error(ERROR_SYNTAX, "Object does not start with '{'.");
+
+			return JSONObject();
+		}
+
+		std::map<std::string, JSONObject> map;
+		std::string name;
+
+		name.reserve(25);
+
+		while (true) {
+			eat_space();
+			ch = pop();
+
+			if (ch == 0) {
+				save_error(ERROR_SYNTAX, "Premature end of document while parsing an object.");
+				
+				break;
+			}
+			else if (ch == '}') {
+				//End of object
+				break;
+			}
+			else if (ch == '"') {
+				putback();
+				read_quoted_string(name);
+
+				if (error_code != jacc::ERROR_NONE) {
+					return JSONObject();
+				}
+			}
+			else if (ch == ':') {
+				map.emplace(name, parse_value());
+
+				if (error_code != jacc::ERROR_NONE) {
+					return JSONObject();
+				}
+			}
+			else if (ch == ',') {
+				//End of a property. Nothing to do here.
+			}
+			else {
+				save_error(ERROR_SYNTAX, "Invalid character in an object.");
+			}
+
+			if (error_code != ERROR_NONE) {
+				return JSONObject();
+			}
+		}
+
+		return JSONObject(map);
 	}
 
 	JSONObject Parser::parse_number() {

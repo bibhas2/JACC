@@ -14,7 +14,7 @@ void test_peek()
     auto src = "{    \"id:\", 10}";
     jacc::Parser p;
 
-    p.parse(src);
+    p.data = src;
 
     assert(p.peek() == '{');
 
@@ -28,17 +28,17 @@ void test_peek()
 }
 
 void test_str_ctor() {
-    jacc::JSONObject o1(std::string_view("Bugs Bunny"));
+    jacc::JSONObject o1(std::string("Bugs Bunny"));
 
     assert(o1.type == jacc::JSON_STRING);
     assert(o1.str == "Bugs Bunny");
 }
 
 void test_move() {
-    std::map<std::string_view, jacc::JSONObject> map1;
+    std::map<std::string, jacc::JSONObject> map1;
 
     map1.emplace("customer_id", jacc::JSONObject(1001.));
-    map1.emplace("customer_name", jacc::JSONObject(std::string_view("Bugs Bunny")));
+    map1.emplace("customer_name", jacc::JSONObject(std::string("Bugs Bunny")));
 
     jacc::JSONObject o1(map1);
     jacc::JSONObject o2(std::move(o1));
@@ -59,10 +59,10 @@ void test_move() {
 }
 
 void test_map_ctor() {
-    std::map<std::string_view, jacc::JSONObject> map1;
+    std::map<std::string, jacc::JSONObject> map1;
 
     map1.emplace("customer_id", jacc::JSONObject(1001.));
-    map1.emplace("customer_name", jacc::JSONObject(std::string_view("Bugs Bunny")));
+    map1.emplace("customer_name", jacc::JSONObject(std::string("Bugs Bunny")));
 
     assert(map1.size() == 2);
 
@@ -72,7 +72,7 @@ void test_map_ctor() {
     assert(o1.object.size() == 2);
     assert(map1.size() == 0);
 
-    std::map<std::string_view, jacc::JSONObject> map2;
+    std::map<std::string, jacc::JSONObject> map2;
 
     map2.emplace("customer", std::move(o1));
 
@@ -85,15 +85,15 @@ void test_map_ctor() {
 }
 
 void test_array_ctor() {
-    std::map<std::string_view, jacc::JSONObject> map;
+    std::map<std::string, jacc::JSONObject> map;
 
     map.emplace("customer_id", jacc::JSONObject(1001.));
-    map.emplace("customer_name", jacc::JSONObject(std::string_view("Bugs Bunny")));
+    map.emplace("customer_name", jacc::JSONObject(std::string("Bugs Bunny")));
 
     jacc::JSONObject o1(map);
 
     map.emplace("customer_id", jacc::JSONObject(1002.));
-    map.emplace("customer_name", jacc::JSONObject(std::string_view("Daffy Duck")));
+    map.emplace("customer_name", jacc::JSONObject(std::string("Daffy Duck")));
 
     jacc::JSONObject o2(map);
 
@@ -164,6 +164,29 @@ void test_str_array() {
     assert(p.root.array[2].str == "World\nMoon");
 }
 
+void test_object() {
+    const char* json = R"(
+{
+  "name": "Bugs Bunny",
+  "age": 10,
+  "manager": {
+    "name": "Daffy Duck"
+  }
+}
+)";
+
+    jacc::Parser p;
+
+    p.parse(json);
+
+    assert(p.error_code == jacc::ERROR_NONE);
+    assert(p.root.type == jacc::JSON_OBJECT);
+    assert(p.root.object["name"].type == jacc::JSON_STRING);
+    assert(p.root.object["age"].type == jacc::JSON_NUMBER);
+    assert(p.root.object["manager"].type == jacc::JSON_OBJECT);
+    assert(p.root.object["manager"].object["name"].str == "Daffy Duck");
+}
+
 int main()
 {
     test_str_ctor();
@@ -175,4 +198,5 @@ int main()
     test_bool_array();
     test_null_array();
     test_str_array();
+    test_object();
 }

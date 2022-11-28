@@ -27,13 +27,13 @@ namespace jacc {
 
 		std::string str;
 		double number = 0.0;
-		std::map<std::string_view, JSONObject>  object;
+		std::map<std::string, JSONObject>  object;
 		std::vector<JSONObject> array;
 		bool booleanValue = false;
 
 		JSONObject();
-		JSONObject(const std::string_view& s);
-		JSONObject(std::map<std::string_view, JSONObject>& o);
+		JSONObject(const std::string& s);
+		JSONObject(std::map<std::string, JSONObject>& o);
 		JSONObject(std::vector<JSONObject>& a);
 		JSONObject(double n);
 		JSONObject(bool b);
@@ -63,7 +63,7 @@ namespace jacc {
 		void putback();
 		void eat_space();
 		void read_value_token();
-
+		void read_quoted_string(std::string& s);
 		void save_error(ErrorCode code, const char* msg);
 		void parse(std::string_view source);
 		JSONObject parse_value();
