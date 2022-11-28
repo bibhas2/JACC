@@ -150,6 +150,20 @@ void test_null_array() {
     assert(p.root.array[4].type == jacc::JSON_NULL);
 }
 
+void test_str_array() {
+    const char* json = "[\"Hello\", \"Wonderful\", \"World\\nMoon\"]";
+    jacc::Parser p;
+
+    p.parse(json);
+
+    assert(p.error_code == jacc::ERROR_NONE);
+    assert(p.root.type == jacc::JSON_ARRAY);
+    assert(p.root.array.size() == 3);
+    assert(p.root.array[1].type == jacc::JSON_STRING);
+    assert(p.root.array[1].str == "Wonderful");
+    assert(p.root.array[2].str == "World\nMoon");
+}
+
 int main()
 {
     test_str_ctor();
@@ -160,4 +174,5 @@ int main()
     test_num_array();
     test_bool_array();
     test_null_array();
+    test_str_array();
 }

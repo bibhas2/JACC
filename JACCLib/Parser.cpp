@@ -31,7 +31,7 @@ namespace jacc {
 		type = other.type;
 
 		if (other.type == JSON_STRING) {
-			str = other.str;
+			str = std::move(other.str);
 		}
 		else if (other.type == JSON_NUMBER) {
 			number = other.number;
@@ -54,7 +54,7 @@ namespace jacc {
 			type = other.type;
 
 			if (other.type == JSON_STRING) {
-				str = other.str;
+				str = std::move(other.str);
 			}
 			else if (other.type == JSON_NUMBER) {
 				number = other.number;
@@ -73,6 +73,22 @@ namespace jacc {
 		}
 
 		return *this;
+	}
+
+	/*
+	 * Code stolen from: http://stackoverflow.com/a/4609989/1036017
+	 */
+	static void unicode_to_UTF8(int unicode, char* out, int* bytes_written) {
+		char* pos = out;
+
+		if (unicode < 0x80) *pos++ = unicode;
+		else if (unicode < 0x800) *pos++ = 192 + unicode / 64, * pos++ = 128 + unicode % 64;
+		else if (unicode - 0xd800u < 0x800) {}
+		else if (unicode < 0x10000) *pos++ = 224 + unicode / 4096, * pos++ = 128 + unicode / 64 % 64, * pos++ = 128 + unicode % 64;
+		else if (unicode < 0x110000) *pos++ = 240 + unicode / 262144, * pos++ = 128 + unicode / 4096 % 64, * pos++ = 128 + unicode / 64 % 64, * pos++ = 128 + unicode % 64;
+
+
+		*bytes_written = (pos - out);
 	}
 
 	Parser::Parser() {
@@ -160,8 +176,95 @@ namespace jacc {
 	}
 
 	JSONObject Parser::parse_string() {
-		return JSONObject();
+		eat_space();
+
+		char ch = pop();
+
+		if (ch == 0) {
+			save_error(ERROR_SYNTAX, "Premature end of document while parsing string.");
+
+			return JSONObject();
+		}
+
+		JSONObject result;
+
+		while ((ch = pop()) != '"') {
+			if (ch == 0) {
+				save_error(ERROR_SYNTAX, "Premature end of document while parsing string.");
+				
+				return JSONObject();
+			}
+
+			if (ch == '\\') {
+				//Escape handling
+
+				char escaped = pop();
+
+				if (escaped == 0) {
+					save_error(ERROR_SYNTAX, "Invalid escaped character in string.");
+
+					return JSONObject();
+				}
+
+				if (escaped == 't') {
+					ch = '\t';
+				}
+				else if (escaped == 'r') {
+					ch = '\r';
+				}
+				else if (escaped == 'n') {
+					ch = '\n';
+				}
+				else if (escaped == 'b') {
+					ch = '\b';
+				}
+				else if (escaped == '"') {
+					ch = '"';
+				}
+				else if (escaped == '\\') {
+					ch = '\\';
+				}
+				else if (escaped == 'u') {
+					//Unicode escape. Must be 2 hex digits.
+					char in[5];
+
+					in[0] = pop();
+					in[1] = pop();
+					in[2] = pop();
+					in[3] = pop();
+					in[4] = '\0';
+
+					int unicode;
+
+					sscanf_s(in, "%04X", &unicode);
+
+					char out[4];
+					int bytes_written;
+
+					unicode_to_UTF8(unicode, out, &bytes_written);
+
+					if (bytes_written == 0) {
+						save_error(ERROR_SYNTAX, "Failed to convert UNICODE to UTF-8.");
+						
+						return JSONObject();
+					}
+
+					for (int i = 0; i < bytes_written; ++i) {
+						result.str.push_back(out[i]);
+					}
+
+					continue;
+				}
+			}
+
+			result.str.push_back(ch);
+		}
+
+		result.type = jacc::JSON_STRING;
+
+		return result;
 	}
+
 	JSONObject Parser::parse_object() {
 		return JSONObject();
 	}

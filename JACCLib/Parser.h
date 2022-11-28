@@ -25,7 +25,7 @@ namespace jacc {
 	struct JSONObject {
 		JSONType type = JSON_UNDEFINED;
 
-		std::string_view str;
+		std::string str;
 		double number = 0.0;
 		std::map<std::string_view, JSONObject>  object;
 		std::vector<JSONObject> array;
