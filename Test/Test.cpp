@@ -25,6 +25,7 @@ void test_str_ctor() {
     jacc::JSONObject o1(std::string_view("Bugs Bunny"));
 
     assert(o1.type == jacc::JSON_STRING);
+    assert(o1.str == "Bugs Bunny");
 }
 
 void test_move() {

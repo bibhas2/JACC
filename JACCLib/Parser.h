@@ -6,13 +6,13 @@
 #include <string_view>
 
 namespace jacc {
-	enum ErrorCode {
+	enum ErrorCode : char {
 		ERROR_NONE,
 		ERROR_INVALID_TYPE,
 		ERROR_SYNTAX
 	};
 
-	enum JSONType {
+	enum JSONType : char {
 		JSON_UNDEFINED,
 		JSON_STRING,
 		JSON_NUMBER,
