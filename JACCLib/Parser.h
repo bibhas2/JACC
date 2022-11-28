@@ -37,9 +37,13 @@ namespace jacc {
 		JSONObject(std::vector<JSONObject>& a);
 		JSONObject(double n);
 		JSONObject(bool b);
-		JSONObject(const JSONObject& other) = delete;
 		JSONObject(JSONObject&& other);
+
+		//Disable any copying. Deep copying can be very
+		//expensive for a nested class like JSONObject.
+		JSONObject(const JSONObject& other) = delete;
 		JSONObject& operator=(const JSONObject& other) = delete;
+
 		JSONObject& operator=(JSONObject&& other);
 	};
 	

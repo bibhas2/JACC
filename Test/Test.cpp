@@ -77,10 +77,36 @@ void test_map_ctor() {
     assert(o2.object["customer"].object["customer_name"].str == "Bugs Bunny");
 }
 
+void test_array_ctor() {
+    std::map<std::string_view, jacc::JSONObject> map;
+
+    map.emplace("customer_id", jacc::JSONObject(1001.));
+    map.emplace("customer_name", jacc::JSONObject(std::string_view("Bugs Bunny")));
+
+    jacc::JSONObject o1(map);
+
+    map.emplace("customer_id", jacc::JSONObject(1002.));
+    map.emplace("customer_name", jacc::JSONObject(std::string_view("Daffy Duck")));
+
+    jacc::JSONObject o2(map);
+
+    std::vector<jacc::JSONObject> list;
+
+    list.push_back(std::move(o1));
+    list.push_back(std::move(o2));
+
+    jacc::JSONObject o3(list);
+
+    assert(o3.type == jacc::JSON_ARRAY);
+    assert(o3.array.size() == 2);
+    assert(o3.array[1].object["customer_name"].str == "Daffy Duck");
+}
+
 int main()
 {
     test_str_ctor();
     test_map_ctor();
+    test_array_ctor();
     test_move();
     test_peek();
 }
