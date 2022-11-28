@@ -187,6 +187,26 @@ void test_object() {
     assert(p.root.object["manager"].object["name"].str == "Daffy Duck");
 }
 
+void test_mixed_array() {
+    const char* json = R"(
+[
+  "Hello",
+  true,
+  {
+    "name": "Roger Rabbit"
+  }
+]
+)";
+    jacc::Parser p;
+
+    p.parse(json);
+
+    assert(p.error_code == jacc::ERROR_NONE);
+    assert(p.root.type == jacc::JSON_ARRAY);
+    assert(p.root.array[2].object["name"].type == jacc::JSON_STRING);
+    assert(p.root.array[2].object["name"].str == "Roger Rabbit");
+}
+
 int main()
 {
     test_str_ctor();
@@ -199,4 +219,5 @@ int main()
     test_null_array();
     test_str_array();
     test_object();
+    test_mixed_array();
 }
