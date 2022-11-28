@@ -37,9 +37,9 @@ namespace jacc {
 		JSONObject(std::vector<JSONObject>& a);
 		JSONObject(double n);
 		JSONObject(bool b);
-		JSONObject(const JSONObject& other);
+		JSONObject(const JSONObject& other) = delete;
 		JSONObject(JSONObject&& other);
-		JSONObject& operator=(const JSONObject& other);
+		JSONObject& operator=(const JSONObject& other) = delete;
 		JSONObject& operator=(JSONObject&& other);
 	};
 	

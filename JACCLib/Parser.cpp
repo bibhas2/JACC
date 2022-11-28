@@ -1,4 +1,5 @@
 #include "Parser.h"
+#include <iostream>
 
 namespace jacc {
 	JSONObject::JSONObject() {
@@ -25,25 +26,6 @@ namespace jacc {
 
 	}
 
-	JSONObject::JSONObject(const JSONObject& other) {
-		type = other.type;
-
-		if (other.type == JSON_STRING) {
-			str = other.str;
-		} 
-		else if (other.type == JSON_NUMBER) {
-			number = other.number;
-		} 
-		else if (other.type == JSON_ARRAY) {
-			array = other.array;
-		}
-		else if (other.type == JSON_OBJECT) {
-			object = other.object;
-		}
-		else if (other.type == JSON_BOOLEAN) {
-			booleanValue = other.booleanValue;
-		}
-	}
 
 	JSONObject::JSONObject(JSONObject&& other) {
 		type = other.type;
@@ -88,30 +70,6 @@ namespace jacc {
 			}
 
 			other.type = JSON_UNDEFINED;
-		}
-
-		return *this;
-	}
-
-	JSONObject& JSONObject::operator=(const JSONObject& other) {
-		if (this != &other) {
-			type = other.type;
-
-			if (other.type == JSON_STRING) {
-				str = other.str;
-			}
-			else if (other.type == JSON_NUMBER) {
-				number = other.number;
-			}
-			else if (other.type == JSON_ARRAY) {
-				array = other.array;
-			}
-			else if (other.type == JSON_OBJECT) {
-				object = other.object;
-			}
-			else if (other.type == JSON_BOOLEAN) {
-				booleanValue = other.booleanValue;
-			}
 		}
 
 		return *this;
