@@ -67,7 +67,7 @@ void test_map_ctor() {
 
     std::map<std::string_view, jacc::JSONObject> map2;
 
-    map2.emplace("customer", std::move(jacc::JSONObject(o1)));
+    map2.emplace("customer", std::move(o1));
 
     jacc::JSONObject o2(map2);
 
