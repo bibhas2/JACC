@@ -23,16 +23,24 @@ namespace jacc {
 	};
 	
 	struct JSONObject {
-		JSONType type;
+		JSONType type = JSON_UNDEFINED;
 
-		union {
-			std::string_view str;
-			double number;
-			std::map<std::string_view, JSONObject>  object;
-			std::vector<JSONObject> array;
-			bool booleanValue;
-			bool isNull;
-		} value;
+		std::string_view str;
+		double number = 0.0;
+		std::map<std::string_view, JSONObject>  object;
+		std::vector<JSONObject> array;
+		bool booleanValue = false;
+
+		JSONObject();
+		JSONObject(const std::string_view& s);
+		JSONObject(std::map<std::string_view, JSONObject>& o);
+		JSONObject(std::vector<JSONObject>& a);
+		JSONObject(double n);
+		JSONObject(bool b);
+		JSONObject(const JSONObject& other);
+		JSONObject(JSONObject&& other);
+		JSONObject& operator=(const JSONObject& other);
+		JSONObject& operator=(JSONObject&& other);
 	};
 	
 	class Parser
@@ -40,12 +48,15 @@ namespace jacc {
 	public:
 		std::string_view data;
 		size_t location = 0;
+		ErrorCode error_code = ERROR_NONE;
+		const char* error_message = nullptr;
 
 		char peek();
 		char pop();
 		void putback();
 		void eat_space();
 
+		void save_error(ErrorCode code, const char* msg);
 		void parse(std::string_view source);
 	};
 }
