@@ -183,10 +183,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="FileReader.h" />
     <ClInclude Include="Parser.h" />
     <ClInclude Include="StringReader.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="FileReader.cpp" />
     <ClCompile Include="Parser.cpp" />
     <ClCompile Include="StringReader.cpp" />
   </ItemGroup>

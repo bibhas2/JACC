@@ -1,8 +1,10 @@
 #include <iostream>
 #include <Parser.h>
 #include <StringReader.h>
+#include <FileReader.h>
 #include <assert.h>
 #include <cmath>
+#include <fstream>
 
 #include "Test.h"
 
@@ -210,6 +212,39 @@ void test_mixed_array() {
     assert(p.root.array[2].object["name"].str == "Roger Rabbit");
 }
 
+void test_file_reader() {
+    const char* json = R"(
+[
+  "Hello",
+  true,
+  {
+    "name": "Roger Rabbit"
+  }
+]
+)";
+    const char* file_name = "__test.json";
+ 
+    {
+        std::ofstream test_file(file_name);
+
+        test_file << json;
+    } //Closes file
+
+    {
+        jacc::FileReader reader(file_name);
+        jacc::Parser p(reader);
+
+        p.parse();
+
+        assert(p.error_code == jacc::ERROR_NONE);
+        assert(p.root.type == jacc::JSON_ARRAY);
+        assert(p.root.array[2].object["name"].type == jacc::JSON_STRING);
+        assert(p.root.array[2].object["name"].str == "Roger Rabbit");
+    } //Closes file
+
+    std::remove(file_name);
+}
+
 int main()
 {
     test_str_ctor();
@@ -223,4 +258,5 @@ int main()
     test_str_array();
     test_object();
     test_mixed_array();
+    test_file_reader();
 }
