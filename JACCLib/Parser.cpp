@@ -29,7 +29,7 @@ namespace jacc {
 	}
 
 
-	JSONObject::JSONObject(JSONObject&& other) {
+	JSONObject::JSONObject(JSONObject&& other) noexcept {
 		type = other.type;
 
 		if (other.type == JSON_STRING) {
@@ -51,7 +51,7 @@ namespace jacc {
 		other.type = JSON_UNDEFINED;
 	}
 
-	JSONObject& JSONObject::operator=(JSONObject&& other) {
+	JSONObject& JSONObject::operator=(JSONObject&& other) noexcept {
 		if (this != &other) {
 			type = other.type;
 
