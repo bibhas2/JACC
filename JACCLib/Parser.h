@@ -47,17 +47,24 @@ namespace jacc {
 		JSONObject& operator=(JSONObject&& other);
 	};
 	
+	struct Reader
+	{
+		virtual char peek() = 0;
+		virtual char pop() = 0;
+		virtual void putback() = 0;
+		virtual ~Reader() {};
+	};
+
 	class Parser
 	{
 	public:
-		std::string_view data;
-		size_t location = 0;
+		Reader& reader;
 		ErrorCode error_code = ERROR_NONE;
 		const char* error_message = nullptr;
 		JSONObject root;
 		std::string value_token;
 
-		Parser();
+		Parser(Reader& r);
 		char peek();
 		char pop();
 		void putback();
@@ -65,7 +72,7 @@ namespace jacc {
 		void read_value_token();
 		void read_quoted_string(std::string& s);
 		void save_error(ErrorCode code, const char* msg);
-		void parse(std::string_view source);
+		void parse();
 		JSONObject parse_value();
 		JSONObject parse_array();
 		JSONObject parse_string();

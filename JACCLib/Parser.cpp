@@ -91,14 +91,11 @@ namespace jacc {
 		*bytes_written = (pos - out);
 	}
 
-	Parser::Parser() {
+	Parser::Parser(Reader& r) : reader(r) {
 		value_token.reserve(14);
 	}
 
-	void Parser::parse(std::string_view source) {
-		data = source;
-		location = 0;
-
+	void Parser::parse() {
 		eat_space();
 
 		char ch = peek();
@@ -448,30 +445,14 @@ namespace jacc {
 	}
 
 	char Parser::peek() {
-		if (location < data.size()) {
-			return data.at(location);
-		}
-		else {
-			return '\0';
-		}
+		return reader.peek();
 	}
 	char Parser::pop() {
-		if (location < data.size()) {
-			char result = data.at(location);
-
-			++location;
-
-			return result;
-		}
-		else {
-			return '\0';
-		}
+		return reader.pop();
 	}
 
 	void Parser::putback() {
-		if (location > 0) {
-			--location;
-		}
+		reader.putback();
 	}
 
 	void Parser::eat_space() {

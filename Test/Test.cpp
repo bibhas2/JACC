@@ -1,5 +1,6 @@
 #include <iostream>
 #include <Parser.h>
+#include <StringReader.h>
 #include <assert.h>
 #include <cmath>
 
@@ -9,12 +10,10 @@ bool number_equals(double n1, double n2) {
     return fabs(n1 - n2) < 0.0001;
 }
 
-void test_peek()
+void test_string_reader()
 {
     auto src = "{    \"id:\", 10}";
-    jacc::Parser p;
-
-    p.data = src;
+    jacc::StringReader p(src);
 
     assert(p.peek() == '{');
 
@@ -23,8 +22,6 @@ void test_peek()
     assert(p.pop() == '{');
     p.putback();
     assert(p.pop() == '{');
-    p.eat_space();
-    assert(p.pop() == '\"');
 }
 
 void test_str_ctor() {
@@ -111,9 +108,10 @@ void test_array_ctor() {
 
 void test_num_array() {
     const char* json = "[1.11, 3, -10, 4.44]";
-    jacc::Parser p;
+    jacc::StringReader reader(json);
+    jacc::Parser p(reader);
 
-    p.parse(json);
+    p.parse();
 
     assert(p.error_code == jacc::ERROR_NONE);
     assert(p.root.type == jacc::JSON_ARRAY);
@@ -125,9 +123,10 @@ void test_num_array() {
 
 void test_bool_array() {
     const char* json = "[true, false, true, false, false]";
-    jacc::Parser p;
+    jacc::StringReader reader(json);
+    jacc::Parser p(reader);
 
-    p.parse(json);
+    p.parse();
 
     assert(p.error_code == jacc::ERROR_NONE);
     assert(p.root.type == jacc::JSON_ARRAY);
@@ -139,9 +138,10 @@ void test_bool_array() {
 
 void test_null_array() {
     const char* json = "[true, null, true, false, null]";
-    jacc::Parser p;
+    jacc::StringReader reader(json);
+    jacc::Parser p(reader);
 
-    p.parse(json);
+    p.parse();
 
     assert(p.error_code == jacc::ERROR_NONE);
     assert(p.root.type == jacc::JSON_ARRAY);
@@ -152,9 +152,10 @@ void test_null_array() {
 
 void test_str_array() {
     const char* json = "[\"Hello\", \"Wonderful\", \"World\\nMoon\"]";
-    jacc::Parser p;
+    jacc::StringReader reader(json);
+    jacc::Parser p(reader);
 
-    p.parse(json);
+    p.parse();
 
     assert(p.error_code == jacc::ERROR_NONE);
     assert(p.root.type == jacc::JSON_ARRAY);
@@ -175,9 +176,10 @@ void test_object() {
 }
 )";
 
-    jacc::Parser p;
+    jacc::StringReader reader(json);
+    jacc::Parser p(reader);
 
-    p.parse(json);
+    p.parse();
 
     assert(p.error_code == jacc::ERROR_NONE);
     assert(p.root.type == jacc::JSON_OBJECT);
@@ -197,9 +199,10 @@ void test_mixed_array() {
   }
 ]
 )";
-    jacc::Parser p;
+    jacc::StringReader reader(json);
+    jacc::Parser p(reader);
 
-    p.parse(json);
+    p.parse();
 
     assert(p.error_code == jacc::ERROR_NONE);
     assert(p.root.type == jacc::JSON_ARRAY);
@@ -213,7 +216,7 @@ int main()
     test_map_ctor();
     test_array_ctor();
     test_move();
-    test_peek();
+    test_string_reader();
     test_num_array();
     test_bool_array();
     test_null_array();

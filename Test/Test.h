@@ -1,3 +1,3 @@
 #pragma once
 
-void test_peek();
+void test_string_reader();
