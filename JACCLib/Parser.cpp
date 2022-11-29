@@ -6,10 +6,12 @@ namespace jacc {
 
 	}
 
-	JSONObject::JSONObject(const std::string& s) : str(std::move(s)), type(JSON_STRING) {
+	JSONObject::JSONObject(std::string& s) : str(std::move(s)), type(JSON_STRING) {
 
 	}
+	JSONObject::JSONObject(const char *s) : str(s), type(JSON_STRING) {
 
+	}
 	JSONObject::JSONObject(std::map<std::string, JSONObject>& o) : object(std::move(o)), type(JSON_OBJECT) {
 
 	}

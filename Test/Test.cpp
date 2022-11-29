@@ -25,7 +25,7 @@ void test_string_reader()
 }
 
 void test_str_ctor() {
-    jacc::JSONObject o1(std::string("Bugs Bunny"));
+    jacc::JSONObject o1("Bugs Bunny");
 
     assert(o1.type == jacc::JSON_STRING);
     assert(o1.str == "Bugs Bunny");
@@ -35,7 +35,7 @@ void test_move() {
     std::map<std::string, jacc::JSONObject> map1;
 
     map1.emplace("customer_id", jacc::JSONObject(1001.));
-    map1.emplace("customer_name", jacc::JSONObject(std::string("Bugs Bunny")));
+    map1.emplace("customer_name", jacc::JSONObject("Bugs Bunny"));
 
     jacc::JSONObject o1(map1);
     jacc::JSONObject o2(std::move(o1));
@@ -59,7 +59,7 @@ void test_map_ctor() {
     std::map<std::string, jacc::JSONObject> map1;
 
     map1.emplace("customer_id", jacc::JSONObject(1001.));
-    map1.emplace("customer_name", jacc::JSONObject(std::string("Bugs Bunny")));
+    map1.emplace("customer_name", jacc::JSONObject("Bugs Bunny"));
 
     assert(map1.size() == 2);
 
@@ -85,12 +85,12 @@ void test_array_ctor() {
     std::map<std::string, jacc::JSONObject> map;
 
     map.emplace("customer_id", jacc::JSONObject(1001.));
-    map.emplace("customer_name", jacc::JSONObject(std::string("Bugs Bunny")));
+    map.emplace("customer_name", jacc::JSONObject("Bugs Bunny"));
 
     jacc::JSONObject o1(map);
 
     map.emplace("customer_id", jacc::JSONObject(1002.));
-    map.emplace("customer_name", jacc::JSONObject(std::string("Daffy Duck")));
+    map.emplace("customer_name", jacc::JSONObject("Daffy Duck"));
 
     jacc::JSONObject o2(map);
 

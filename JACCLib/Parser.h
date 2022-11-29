@@ -32,7 +32,8 @@ namespace jacc {
 		bool booleanValue = false;
 
 		JSONObject();
-		JSONObject(const std::string& s);
+		JSONObject(std::string& s);
+		JSONObject(const char* s);
 		JSONObject(std::map<std::string, JSONObject>& o);
 		JSONObject(std::vector<JSONObject>& a);
 		JSONObject(double n);
