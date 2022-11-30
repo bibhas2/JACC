@@ -2,6 +2,7 @@
 #include <Parser.h>
 #include <StringReader.h>
 #include <FileReader.h>
+#include <MemoryMappedReader.h>
 #include <assert.h>
 #include <cmath>
 #include <fstream>
@@ -245,6 +246,44 @@ void test_file_reader() {
     std::remove(file_name);
 }
 
+
+void test_memory_map_reader() {
+    const char* json = R"(
+[
+  "Hello",
+  true,
+  {
+    "name": "Roger Rabbit"
+  }
+]
+)";
+    const char* file_name = "__test.json";
+
+    {
+        std::ofstream test_file(file_name);
+
+        test_file << json;
+    } //Closes file
+
+    {
+        jacc::MemoryMappedReader reader(file_name);
+
+        assert(reader.data.size() > 0);
+        assert(reader.data.data() != nullptr);
+
+        jacc::Parser p(reader);
+
+        p.parse();
+
+        assert(p.error_code == jacc::ERROR_NONE);
+        assert(p.root.type == jacc::JSON_ARRAY);
+        assert(p.root.array[2].object["name"].type == jacc::JSON_STRING);
+        assert(p.root.array[2].object["name"].str == "Roger Rabbit");
+    } //Closes file
+
+    std::remove(file_name);
+}
+
 int main()
 {
     test_str_ctor();
@@ -259,4 +298,5 @@ int main()
     test_object();
     test_mixed_array();
     test_file_reader();
+    test_memory_map_reader();
 }

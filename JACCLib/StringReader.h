@@ -8,6 +8,7 @@ namespace jacc {
 		size_t location = 0;
 		std::string_view data;
 
+		StringReader();
 		StringReader(std::string_view source);
 
 		char peek();

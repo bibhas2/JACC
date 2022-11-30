@@ -2,7 +2,9 @@
 
 namespace jacc {
 	StringReader::StringReader(std::string_view source) : location(0), data(source) {
+	}
 
+	StringReader::StringReader() : location(0) {
 	}
 
 	StringReader::~StringReader() {
