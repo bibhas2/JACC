@@ -31,12 +31,16 @@ namespace jacc {
 
     MemoryMappedReader::~MemoryMappedReader() {
 #ifdef _WIN32
-        if (map_handle == INVALID_HANDLE_VALUE) {
+        if (map_handle != INVALID_HANDLE_VALUE) {
+            if (data.data() != nullptr) {
+                ::UnmapViewOfFile(data.data());
+            }
+
             ::CloseHandle(map_handle);
 
             map_handle = INVALID_HANDLE_VALUE;
         }
-        if (file_handle == INVALID_HANDLE_VALUE) {
+        if (file_handle != INVALID_HANDLE_VALUE) {
             ::CloseHandle(file_handle);
 
             file_handle = INVALID_HANDLE_VALUE;
