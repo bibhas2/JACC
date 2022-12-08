@@ -255,7 +255,7 @@ namespace jacc {
 
 					int unicode;
 
-					sscanf_s(in, "%04X", &unicode);
+					sscanf(in, "%04X", &unicode);
 
 					char out[4];
 					int bytes_written;
