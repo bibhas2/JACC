@@ -77,12 +77,6 @@ namespace jacc {
 		return *this;
 	}
 
-	/*
-	* According to https://www.ietf.org/rfc/rfc4627.txt, code points larger
-	* than 0xFFFF must be encoded in a JSON string using UTF-16. This routine
-	* doesn't handle that situation. For example, U+1D11E may be represented as
-	* "\uD834\uDD1E"
-	*/
 	void utf8_encode(std::string& str, unsigned long code_point) {
 		if (code_point <= 0x007F) {
 			char ch = static_cast<char>(code_point);
@@ -269,24 +263,55 @@ namespace jacc {
 					ch = '\\';
 				}
 				else if (escaped == 'u') {
-					//Unicode escape. Must be 2 hex digits.
-					char buff[5];
+                    /*
+                     JSON Unicode escape basics:
+                     
+                     Code points U+FFFF and below are supplied in JSON as is without any kind of encoding.
+                     The escape must use 4 hex digits after a \u.
+                     Example: code point U+03A9 is escpaed as "\u03A9".
+                     
+                     A code point above U+FFFF is first UTF-16 encoded. This produces two 16 bit integers (called surrogate pairs).
+                     They are then supplied in JSON as two consecutive 4 hex digit integers.
+                     Example: code point U+1D11E is escaped in JSON as "\uD834\uDD1E".
+                     
+                     The first integer in the pair is always in range of (0xD800, 0xDFFF) inclusive.
+                     No valid code point exists in that range. So an integer in that range
+                     signals that this is a leading integer in a UTF-16 encoding.
+                     
+                     See Section 2.5: https://www.ietf.org/rfc/rfc4627.txt
+                     */
+                    
+                    uint16_t i1 = read_codepoint();
 
-					buff[0] = pop();
-					buff[1] = pop();
-					buff[2] = pop();
-					buff[3] = pop();
-					buff[4] = '\0';
-
-					if (::strlen(buff) != 4) {
-						save_error(ERROR_SYNTAX, "Invalid Unicode in string.");
-
+					if (error_code != ERROR_NONE) {
 						return;
 					}
+                    
+                    if (i1 >= 0xD800 && i1 <= 0xDFFF) {
+                        //We need to read the next 16 bit
+                        if (pop() != '\\' || pop() != 'u') {
+                            save_error(ERROR_SYNTAX, "Unicode code point above U+FFFF not escaped correctly.");
+                            
+                            return;
+                        } else {
+                            uint16_t i2 = read_codepoint();
+                            
+                            if (error_code != ERROR_NONE) {
+                                return;
+                            }
+                            
+                            unsigned long code_point = decode_utf16(i1, i2);
 
-					unsigned long code_point = std::strtoul(buff, nullptr, 16);
-
-					utf8_encode(s, code_point);
+                            if (error_code != ERROR_NONE) {
+                                return;
+                            }
+                            
+                            utf8_encode(s, code_point);
+                        }
+                    } else {
+                        //Code point is given as is. No need to decode.
+                        utf8_encode(s, i1);
+                    }
 
 					continue;
 				}
@@ -295,6 +320,52 @@ namespace jacc {
 			s.push_back(ch);
 		}
 	}
+
+    /*
+     Convert a UTF-16 encoded surrogate pair to code point.
+     Wikipedia does a great job explaing the UTF-16 encoding scheme.
+     https://en.wikipedia.org/wiki/UTF-16#Code_points_from_U+010000_to_U+10FFFF
+     */
+    unsigned long Parser::decode_utf16(uint16_t i1, uint16_t i2) {
+        if (!(i1 >= 0xD800 && i1 <= 0xDFFF) || !(i2 >= 0xDC00 && i2 <= 0xDFFF)) {
+            //Invalid
+            save_error(ERROR_SYNTAX, "Invalid surrogate pair in Unicode escape.");
+            
+            return 0;
+        } else {
+            //Valid
+            i1 = i1 - 0xD800;
+            i2 = i2 - 0xDC00;
+            
+            unsigned long U_ = (i1 << 10) | i2;
+            unsigned long U = U_ + 0x10000;
+            
+            return U;
+        }
+    }
+
+    /*
+     Reads the next 4 characters as a hex integer.
+     */
+    uint16_t Parser::read_codepoint() {
+        char buff[5];
+
+        for (size_t i = 0; i < 4; ++i) {
+            buff[i] = pop();
+            
+            if (buff[i] == '\0') {
+                save_error(ERROR_SYNTAX, "Invalid Unicode escape in string.");
+
+                return 0;
+            }
+        }
+
+        buff[4] = '\0';
+
+        uint16_t code_point = std::strtoul(buff, nullptr, 16);
+        
+        return code_point;
+    }
 
 	JSONObject Parser::parse_object() {
 		char ch = pop();
