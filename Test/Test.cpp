@@ -182,7 +182,6 @@ void test_unicode() {
     assert(p.root.array.size() == 2);
     assert(p.root.array[1].type == jacc::JSON_STRING);
 
-    std::cout << p.root.array[0].str << std::endl;
     assert(p.root.array[0].str == "Omega \u03A9");
     assert(p.root.array[1].str == "Japanese \u8A9E");
 }
