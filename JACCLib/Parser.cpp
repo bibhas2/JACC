@@ -78,19 +78,44 @@ namespace jacc {
 	}
 
 	/*
-	 * Code stolen from: http://stackoverflow.com/a/4609989/1036017
-	 */
-	static void unicode_to_UTF8(int unicode, char* out, int* bytes_written) {
-		char* pos = out;
+	* According to https://www.ietf.org/rfc/rfc4627.txt, code points larger
+	* than 0xFFFF must be encoded in a JSON string using UTF-16. This routine
+	* doesn't handle that situation. For example, U+1D11E may be represented as
+	* "\uD834\uDD1E"
+	*/
+	void utf8_encode(std::string& str, unsigned long code_point) {
+		if (code_point <= 0x007F) {
+			char ch = static_cast<char>(code_point);
 
-		if (unicode < 0x80) *pos++ = unicode;
-		else if (unicode < 0x800) *pos++ = 192 + unicode / 64, * pos++ = 128 + unicode % 64;
-		else if (unicode - 0xd800u < 0x800) {}
-		else if (unicode < 0x10000) *pos++ = 224 + unicode / 4096, * pos++ = 128 + unicode / 64 % 64, * pos++ = 128 + unicode % 64;
-		else if (unicode < 0x110000) *pos++ = 240 + unicode / 262144, * pos++ = 128 + unicode / 4096 % 64, * pos++ = 128 + unicode / 64 % 64, * pos++ = 128 + unicode % 64;
+			str.push_back(ch);
+		}
+		else if (code_point <= 0x07FF) {
+			uint8_t b2 = 0b10000000 | (code_point & 0b111111);
+			uint8_t b1 = 0b11000000 | (code_point >> 6);
 
+			str.push_back(b1);
+			str.push_back(b2);
+		}
+		else if (code_point <= 0xFFFF) {
+			uint8_t b3 = 0b10000000 | (code_point & 0b111111);
+			uint8_t b2 = 0b10000000 | ((code_point >> 6) & 0b111111);
+			uint8_t b1 = 0b11100000 | (code_point >> 12);
 
-		*bytes_written = (pos - out);
+			str.push_back(b1);
+			str.push_back(b2);
+			str.push_back(b3);
+		}
+		else if (code_point <= 0x10FFFF) {
+			uint8_t b4 = 0b10000000 | (code_point & 0b111111);
+			uint8_t b3 = 0b10000000 | ((code_point >> 6) & 0b111111);
+			uint8_t b2 = 0b10000000 | ((code_point >> 12) & 0b111111);
+			uint8_t b1 = 0b11110000 | (code_point >> 18);
+
+			str.push_back(b1);
+			str.push_back(b2);
+			str.push_back(b3);
+			str.push_back(b4);
+		}
 	}
 
 	Parser::Parser(Reader& r) : reader(r) {
@@ -245,32 +270,23 @@ namespace jacc {
 				}
 				else if (escaped == 'u') {
 					//Unicode escape. Must be 2 hex digits.
-					char in[5];
+					char buff[5];
 
-					in[0] = pop();
-					in[1] = pop();
-					in[2] = pop();
-					in[3] = pop();
-					in[4] = '\0';
+					buff[0] = pop();
+					buff[1] = pop();
+					buff[2] = pop();
+					buff[3] = pop();
+					buff[4] = '\0';
 
-					int unicode;
-
-					sscanf(in, "%04X", &unicode);
-
-					char out[4];
-					int bytes_written;
-
-					unicode_to_UTF8(unicode, out, &bytes_written);
-
-					if (bytes_written == 0) {
-						save_error(ERROR_SYNTAX, "Failed to convert UNICODE to UTF-8.");
+					if (::strlen(buff) != 4) {
+						save_error(ERROR_SYNTAX, "Invalid Unicode in string.");
 
 						return;
 					}
 
-					for (int i = 0; i < bytes_written; ++i) {
-						s.push_back(out[i]);
-					}
+					unsigned long code_point = std::strtoul(buff, nullptr, 16);
+
+					utf8_encode(s, code_point);
 
 					continue;
 				}

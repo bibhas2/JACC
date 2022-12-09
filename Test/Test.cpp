@@ -168,6 +168,25 @@ void test_str_array() {
     assert(p.root.array[2].str == "World\nMoon");
 }
 
+void test_unicode() {
+    const char* json = R"(
+["Omega \u03A9", "Japanese \u8A9E"]
+)";
+    jacc::StringReader reader(json);
+    jacc::Parser p(reader);
+
+    p.parse();
+
+    assert(p.error_code == jacc::ERROR_NONE);
+    assert(p.root.type == jacc::JSON_ARRAY);
+    assert(p.root.array.size() == 2);
+    assert(p.root.array[1].type == jacc::JSON_STRING);
+
+    std::cout << p.root.array[0].str << std::endl;
+    assert(p.root.array[0].str == "Omega \u03A9");
+    assert(p.root.array[1].str == "Japanese \u8A9E");
+}
+
 void test_object() {
     const char* json = R"(
 {
@@ -295,6 +314,7 @@ int main()
     test_bool_array();
     test_null_array();
     test_str_array();
+    test_unicode();
     test_object();
     test_mixed_array();
     test_file_reader();
