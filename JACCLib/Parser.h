@@ -73,6 +73,8 @@ namespace jacc {
 		void read_value_token();
 		void read_quoted_string(std::string& s);
 		void save_error(ErrorCode code, const char* msg);
+        uint16_t read_codepoint();
+        unsigned long decode_utf16(uint16_t i1, uint16_t i2);
 		void parse();
 		JSONObject parse_value();
 		JSONObject parse_array();

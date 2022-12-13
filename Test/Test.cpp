@@ -168,6 +168,25 @@ void test_str_array() {
     assert(p.root.array[2].str == "World\nMoon");
 }
 
+void test_unicode() {
+    const char* json = R"(
+["Omega \u03A9", "Japanese \u8A9E", "Pair \uD834\uDD1E"]
+)";
+    jacc::StringReader reader(json);
+    jacc::Parser p(reader);
+
+    p.parse();
+
+    assert(p.error_code == jacc::ERROR_NONE);
+    assert(p.root.type == jacc::JSON_ARRAY);
+    assert(p.root.array.size() == 3);
+    assert(p.root.array[1].type == jacc::JSON_STRING);
+
+    assert(p.root.array[0].str == "Omega \u03A9");
+    assert(p.root.array[1].str == "Japanese \u8A9E");
+    assert(p.root.array[2].str == "Pair \U0001D11E");
+}
+
 void test_object() {
     const char* json = R"(
 {
@@ -284,6 +303,27 @@ void test_memory_map_reader() {
     std::remove(file_name);
 }
 
+void test_read_codepoint() {
+    const char* str = "8A9E";
+    jacc::StringReader reader(str);
+    jacc::Parser p(reader);
+    
+    unsigned long cp = p.read_codepoint();
+    
+    assert(p.error_code == jacc::ERROR_NONE);
+    assert(cp == 0x8A9E);
+}
+
+void test_utf16_decode() {
+    jacc::StringReader reader("");
+    jacc::Parser p(reader);
+    
+    unsigned long cp = p.decode_utf16(0xD834, 0xDD1E);
+    
+    assert(p.error_code == jacc::ERROR_NONE);
+    assert(cp == 0x1D11E);
+}
+
 int main()
 {
     test_str_ctor();
@@ -295,8 +335,11 @@ int main()
     test_bool_array();
     test_null_array();
     test_str_array();
+    test_unicode();
     test_object();
     test_mixed_array();
     test_file_reader();
     test_memory_map_reader();
+    test_read_codepoint();
+    test_utf16_decode();
 }
