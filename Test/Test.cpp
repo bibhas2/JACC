@@ -352,6 +352,42 @@ void test_index_operators() {
     assert(root[2]["manager"]["likes"][1].string() == "Singing");
 }
 
+void test_type_operators() {
+    const char* json = R"(
+[
+  "Hello",
+  true,
+  {
+    "name": "Roger Rabbit",
+    "id": 10023,
+    "manager": {
+        "name": "Bugs Bunny",
+        "likes": ["Carrot", "Singing"]
+    }
+  }
+]
+)";
+    jacc::StringReader reader(json);
+    jacc::Parser p(reader);
+
+    auto root = p.parse();
+
+    assert(p.error_code == jacc::ERROR_NONE);
+    assert(root.isArray());
+    
+    double id = root[2]["id"];
+    
+    assert(id == 10023);
+    
+    std::string& s1 = root[2]["manager"]["name"];
+    
+    assert(s1 == "Bugs Bunny");
+    
+    std::string& s2 = root[0];
+    
+    assert(s2 == "Hello");
+}
+
 int main()
 {
     test_str_ctor();
@@ -371,4 +407,5 @@ int main()
     test_read_codepoint();
     test_utf16_decode();
     test_index_operators();
+    test_type_operators();
 }

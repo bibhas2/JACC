@@ -37,7 +37,13 @@ namespace jacc {
 		JSONObject& operator=(JSONObject&& other) noexcept;
         
         JSONObject& operator[](const std::string& index);
+        JSONObject& operator[](const char* index);
         JSONObject& operator[](std::size_t index);
+        JSONObject& operator[](int index);
+        
+        //Type conversion operators
+        operator double();
+        operator std::string&();
 
         bool isUndefined();
         bool isNull();
