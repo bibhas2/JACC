@@ -324,6 +324,34 @@ void test_utf16_decode() {
     assert(cp == 0x1D11E);
 }
 
+void test_index_operators() {
+    const char* json = R"(
+[
+  "Hello",
+  true,
+  {
+    "name": "Roger Rabbit",
+    "id": 10023,
+    "manager": {
+        "name": "Bugs Bunny",
+        "likes": ["Carrot", "Singing"]
+    }
+  }
+]
+)";
+    jacc::StringReader reader(json);
+    jacc::Parser p(reader);
+
+    auto root = p.parse();
+
+    assert(p.error_code == jacc::ERROR_NONE);
+    assert(root.isArray());
+    assert(root[2]["name"].isString());
+    assert(root[2]["name"].string() == "Roger Rabbit");
+    assert(root[2]["manager"]["name"].string() == "Bugs Bunny");
+    assert(root[2]["manager"]["likes"][1].string() == "Singing");
+}
+
 int main()
 {
     test_str_ctor();
@@ -342,4 +370,5 @@ int main()
     test_memory_map_reader();
     test_read_codepoint();
     test_utf16_decode();
+    test_index_operators();
 }

@@ -37,6 +37,14 @@ namespace jacc {
 		return *this;
 	}
 
+    JSONObject& JSONObject::operator[](const std::string& index) {
+        return object()[index];
+    }
+
+    JSONObject& JSONObject::operator[](std::size_t index) {
+        return array()[index];
+    }
+
     bool JSONObject::isUndefined() {
         return std::holds_alternative<jacc::JSON_UNDEFINED>(value);
     }
