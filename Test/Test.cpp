@@ -30,8 +30,8 @@ void test_string_reader()
 void test_str_ctor() {
     jacc::JSONObject o1("Bugs Bunny");
 
-    assert(o1.type == jacc::JSON_STRING);
-    assert(o1.str == "Bugs Bunny");
+    assert(o1.isString());
+    assert(o1.string() == "Bugs Bunny");
 }
 
 void test_move() {
@@ -43,19 +43,19 @@ void test_move() {
     jacc::JSONObject o1(map1);
     jacc::JSONObject o2(std::move(o1));
 
-    assert(o1.type == jacc::JSON_UNDEFINED);
-    assert(o2.type == jacc::JSON_OBJECT);
-    assert(o2.object["customer_name"].str == "Bugs Bunny");
+    assert(o1.isUndefined());
+    assert(o2.isObject());
+    assert(o2.object()["customer_name"].string() == "Bugs Bunny");
 
     jacc::JSONObject o3;
 
-    assert(o3.type == jacc::JSON_UNDEFINED);
+    assert(o3.isUndefined());
 
     o3 = std::move(o2);
 
-    assert(o2.type == jacc::JSON_UNDEFINED);
-    assert(o3.type == jacc::JSON_OBJECT);
-    assert(o3.object["customer_name"].str == "Bugs Bunny");
+    assert(o2.isUndefined());
+    assert(o3.isObject());
+    assert(o3.object()["customer_name"].string() == "Bugs Bunny");
 }
 
 void test_map_ctor() {
@@ -68,8 +68,8 @@ void test_map_ctor() {
 
     jacc::JSONObject o1(map1);
 
-    assert(o1.type == jacc::JSON_OBJECT);
-    assert(o1.object.size() == 2);
+    assert(o1.isObject());
+    assert(o1.object().size() == 2);
     assert(map1.size() == 0);
 
     std::map<std::string, jacc::JSONObject> map2;
@@ -78,10 +78,10 @@ void test_map_ctor() {
 
     jacc::JSONObject o2(map2);
 
-    assert(o2.type == jacc::JSON_OBJECT);
-    assert(o2.object["customer"].type == jacc::JSON_OBJECT);
-    assert(o2.object["customer"].object["customer_id"].type = jacc::JSON_NUMBER);
-    assert(o2.object["customer"].object["customer_name"].str == "Bugs Bunny");
+    assert(o2.isObject());
+    assert(o2.object()["customer"].isObject());
+    assert(o2.object()["customer"].object()["customer_id"].isNumber());
+    assert(o2.object()["customer"].object()["customer_name"].string() == "Bugs Bunny");
 }
 
 void test_array_ctor() {
@@ -104,9 +104,9 @@ void test_array_ctor() {
 
     jacc::JSONObject o3(list);
 
-    assert(o3.type == jacc::JSON_ARRAY);
-    assert(o3.array.size() == 2);
-    assert(o3.array[1].object["customer_name"].str == "Daffy Duck");
+    assert(o3.isArray());
+    assert(o3.array().size() == 2);
+    assert(o3.array()[1].object()["customer_name"].string() == "Daffy Duck");
 }
 
 void test_num_array() {
@@ -114,14 +114,14 @@ void test_num_array() {
     jacc::StringReader reader(json);
     jacc::Parser p(reader);
 
-    p.parse();
+    auto root = p.parse();
 
     assert(p.error_code == jacc::ERROR_NONE);
-    assert(p.root.type == jacc::JSON_ARRAY);
-    assert(p.root.array.size() == 4);
-    assert(p.root.array[3].type == jacc::JSON_NUMBER);
-    assert(number_equals(4.44, p.root.array[3].number));
-    assert(number_equals(-10.0, p.root.array[2].number));
+    assert(root.isArray());
+    assert(root.array().size() == 4);
+    assert(root.array()[3].isNumber());
+    assert(number_equals(4.44, root.array()[3].number()));
+    assert(number_equals(-10.0, root.array()[2].number()));
 }
 
 void test_bool_array() {
@@ -129,14 +129,14 @@ void test_bool_array() {
     jacc::StringReader reader(json);
     jacc::Parser p(reader);
 
-    p.parse();
+    auto root = p.parse();
 
     assert(p.error_code == jacc::ERROR_NONE);
-    assert(p.root.type == jacc::JSON_ARRAY);
-    assert(p.root.array.size() == 5);
-    assert(p.root.array[3].type == jacc::JSON_BOOLEAN);
-    assert(p.root.array[3].booleanValue == false);
-    assert(p.root.array[2].booleanValue == true);
+    assert(root.isArray());
+    assert(root.array().size() == 5);
+    assert(root.array()[3].isBoolean());
+    assert(root.array()[3].boolean() == false);
+    assert(root.array()[2].boolean() == true);
 }
 
 void test_null_array() {
@@ -144,13 +144,13 @@ void test_null_array() {
     jacc::StringReader reader(json);
     jacc::Parser p(reader);
 
-    p.parse();
+    auto root = p.parse();
 
     assert(p.error_code == jacc::ERROR_NONE);
-    assert(p.root.type == jacc::JSON_ARRAY);
-    assert(p.root.array.size() == 5);
-    assert(p.root.array[1].type == jacc::JSON_NULL);
-    assert(p.root.array[4].type == jacc::JSON_NULL);
+    assert(root.isArray());
+    assert(root.array().size() == 5);
+    assert(root.array()[1].isNull());
+    assert(root.array()[4].isNull());
 }
 
 void test_str_array() {
@@ -158,14 +158,14 @@ void test_str_array() {
     jacc::StringReader reader(json);
     jacc::Parser p(reader);
 
-    p.parse();
+    auto root = p.parse();
 
     assert(p.error_code == jacc::ERROR_NONE);
-    assert(p.root.type == jacc::JSON_ARRAY);
-    assert(p.root.array.size() == 3);
-    assert(p.root.array[1].type == jacc::JSON_STRING);
-    assert(p.root.array[1].str == "Wonderful");
-    assert(p.root.array[2].str == "World\nMoon");
+    assert(root.isArray());
+    assert(root.array().size() == 3);
+    assert(root.array()[1].isString());
+    assert(root.array()[1].string() == "Wonderful");
+    assert(root.array()[2].string() == "World\nMoon");
 }
 
 void test_unicode() {
@@ -175,16 +175,16 @@ void test_unicode() {
     jacc::StringReader reader(json);
     jacc::Parser p(reader);
 
-    p.parse();
+    auto root = p.parse();
 
     assert(p.error_code == jacc::ERROR_NONE);
-    assert(p.root.type == jacc::JSON_ARRAY);
-    assert(p.root.array.size() == 3);
-    assert(p.root.array[1].type == jacc::JSON_STRING);
+    assert(root.isArray());
+    assert(root.array().size() == 3);
+    assert(root.array()[1].isString());
 
-    assert(p.root.array[0].str == "Omega \u03A9");
-    assert(p.root.array[1].str == "Japanese \u8A9E");
-    assert(p.root.array[2].str == "Pair \U0001D11E");
+    assert(root.array()[0].string() == "Omega \u03A9");
+    assert(root.array()[1].string() == "Japanese \u8A9E");
+    assert(root.array()[2].string() == "Pair \U0001D11E");
 }
 
 void test_object() {
@@ -201,14 +201,14 @@ void test_object() {
     jacc::StringReader reader(json);
     jacc::Parser p(reader);
 
-    p.parse();
+    auto root = p.parse();
 
     assert(p.error_code == jacc::ERROR_NONE);
-    assert(p.root.type == jacc::JSON_OBJECT);
-    assert(p.root.object["name"].type == jacc::JSON_STRING);
-    assert(p.root.object["age"].type == jacc::JSON_NUMBER);
-    assert(p.root.object["manager"].type == jacc::JSON_OBJECT);
-    assert(p.root.object["manager"].object["name"].str == "Daffy Duck");
+    assert(root.isObject());
+    assert(root.object()["name"].isString());
+    assert(root.object()["age"].isNumber());
+    assert(root.object()["manager"].isObject());
+    assert(root.object()["manager"].object()["name"].string() == "Daffy Duck");
 }
 
 void test_mixed_array() {
@@ -224,12 +224,12 @@ void test_mixed_array() {
     jacc::StringReader reader(json);
     jacc::Parser p(reader);
 
-    p.parse();
+    auto root = p.parse();
 
     assert(p.error_code == jacc::ERROR_NONE);
-    assert(p.root.type == jacc::JSON_ARRAY);
-    assert(p.root.array[2].object["name"].type == jacc::JSON_STRING);
-    assert(p.root.array[2].object["name"].str == "Roger Rabbit");
+    assert(root.isArray());
+    assert(root.array()[2].object()["name"].isString());
+    assert(root.array()[2].object()["name"].string() == "Roger Rabbit");
 }
 
 void test_file_reader() {
@@ -254,12 +254,12 @@ void test_file_reader() {
         jacc::FileReader reader(file_name);
         jacc::Parser p(reader);
 
-        p.parse();
+        auto root = p.parse();
 
         assert(p.error_code == jacc::ERROR_NONE);
-        assert(p.root.type == jacc::JSON_ARRAY);
-        assert(p.root.array[2].object["name"].type == jacc::JSON_STRING);
-        assert(p.root.array[2].object["name"].str == "Roger Rabbit");
+        assert(root.isArray());
+        assert(root.array()[2].object()["name"].isString());
+        assert(root.array()[2].object()["name"].string() == "Roger Rabbit");
     } //Closes file
 
     std::remove(file_name);
@@ -292,12 +292,12 @@ void test_memory_map_reader() {
 
         jacc::Parser p(reader);
 
-        p.parse();
+        auto root = p.parse();
 
         assert(p.error_code == jacc::ERROR_NONE);
-        assert(p.root.type == jacc::JSON_ARRAY);
-        assert(p.root.array[2].object["name"].type == jacc::JSON_STRING);
-        assert(p.root.array[2].object["name"].str == "Roger Rabbit");
+        assert(root.isArray());
+        assert(root.array()[2].object()["name"].isString());
+        assert(root.array()[2].object()["name"].string() == "Roger Rabbit");
     } //Closes file
 
     std::remove(file_name);

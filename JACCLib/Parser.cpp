@@ -2,80 +2,88 @@
 #include <iostream>
 
 namespace jacc {
-	JSONObject::JSONObject() {
-
+	JSONObject::JSONObject() : value(jacc::JSON_UNDEFINED()) {
+	}
+    JSONObject::JSONObject(jacc::JSON_NULL n) : value(n) {
+    }
+	JSONObject::JSONObject(std::string& s) : value(std::move(s)) {
 	}
 
-	JSONObject::JSONObject(std::string& s) : str(std::move(s)), type(JSON_STRING) {
-
-	}
-	JSONObject::JSONObject(const char *s) : str(s), type(JSON_STRING) {
-
-	}
-	JSONObject::JSONObject(std::map<std::string, JSONObject>& o) : object(std::move(o)), type(JSON_OBJECT) {
-
+	JSONObject::JSONObject(const char *s) : value(std::string(s)) {
 	}
 
-	JSONObject::JSONObject(std::vector<JSONObject>& a) : array(std::move(a)), type(JSON_ARRAY) {
-
+	JSONObject::JSONObject(std::map<std::string, JSONObject>& o) : value(std::move(o)) {
 	}
 
-	JSONObject::JSONObject(double n) : number(n), type(JSON_NUMBER) {
-
+	JSONObject::JSONObject(std::vector<JSONObject>& a) : value(std::move(a)) {
 	}
 
-	JSONObject::JSONObject(bool b) : booleanValue(b), type(JSON_BOOLEAN) {
-
+	JSONObject::JSONObject(double n) : value(n) {
 	}
 
+	JSONObject::JSONObject(bool b) : value(b) {
+	}
 
-	JSONObject::JSONObject(JSONObject&& other) noexcept {
-		type = other.type;
-
-		if (other.type == JSON_STRING) {
-			str = std::move(other.str);
-		}
-		else if (other.type == JSON_NUMBER) {
-			number = other.number;
-		}
-		else if (other.type == JSON_ARRAY) {
-			array = std::move(other.array);
-		}
-		else if (other.type == JSON_OBJECT) {
-			object = std::move(other.object);
-		}
-		else if (other.type == JSON_BOOLEAN) {
-			booleanValue = other.booleanValue;
-		}
-
-		other.type = JSON_UNDEFINED;
+	JSONObject::JSONObject(JSONObject&& other) noexcept : value(std::move(other.value))  {
+        other.value = jacc::JSON_UNDEFINED();
 	}
 
 	JSONObject& JSONObject::operator=(JSONObject&& other) noexcept {
 		if (this != &other) {
-			type = other.type;
-
-			if (other.type == JSON_STRING) {
-				str = std::move(other.str);
-			}
-			else if (other.type == JSON_NUMBER) {
-				number = other.number;
-			}
-			else if (other.type == JSON_ARRAY) {
-				array = std::move(other.array);
-			}
-			else if (other.type == JSON_OBJECT) {
-				object = std::move(other.object);
-			}
-			else if (other.type == JSON_BOOLEAN) {
-				booleanValue = other.booleanValue;
-			}
-
-			other.type = JSON_UNDEFINED;
+            value = std::move(other.value);
+            other.value = jacc::JSON_UNDEFINED();
 		}
 
 		return *this;
 	}
+
+    bool JSONObject::isUndefined() {
+        return std::holds_alternative<jacc::JSON_UNDEFINED>(value);
+    }
+
+    bool JSONObject::isNull() {
+        return std::holds_alternative<jacc::JSON_NULL>(value);
+    }
+
+    bool JSONObject::isString() {
+        return std::holds_alternative<std::string>(value);
+    }
+
+    bool JSONObject::isNumber() {
+        return std::holds_alternative<double>(value);
+    }
+
+    bool JSONObject::isObject() {
+        return std::holds_alternative<std::map<std::string, JSONObject>>(value);
+    }
+
+    bool JSONObject::isArray() {
+        return std::holds_alternative<std::vector<JSONObject>>(value);
+    }
+
+    bool JSONObject::isBoolean() {
+        return std::holds_alternative<bool>(value);
+    }
+
+    std::string& JSONObject::string() {
+        return std::get<std::string>(value);
+    }
+
+    double JSONObject::number() {
+        return std::get<double>(value);
+    }
+
+    std::map<std::string, JSONObject>& JSONObject::object() {
+        return std::get<std::map<std::string, JSONObject>>(value);
+    }
+
+    std::vector<JSONObject>& JSONObject::array() {
+        return std::get<std::vector<JSONObject>>(value);
+    }
+
+    bool JSONObject::boolean() {
+        return std::get<bool>(value);
+    }
 
 	void utf8_encode(std::string& str, unsigned long code_point) {
 		if (code_point <= 0x007F) {
@@ -116,21 +124,22 @@ namespace jacc {
 		value_token.reserve(14);
 	}
 
-	void Parser::parse() {
+	JSONObject Parser::parse() {
 		eat_space();
 
 		char ch = peek();
 
 		if (ch == '{') {
-			root = parse_object();
+			return parse_object();
 		}
 		else if (ch == '[') {
-			root = parse_array();
+			return parse_array();
 		}
 		else {
 			save_error(ERROR_SYNTAX, "Document does not start with '{' or '['.");
 		}
 		
+        return JSONObject();
 	}
 
 	JSONObject Parser::parse_value() {
@@ -469,11 +478,7 @@ namespace jacc {
 		}
 
 		if (value_token == "null") {
-			JSONObject o;
-
-			o.type = jacc::JSON_NULL;
-
-			return o;
+			return JSONObject(jacc::JSON_NULL());
 		}
 		else {
 			save_error(ERROR_SYNTAX, "Invalid null value.");

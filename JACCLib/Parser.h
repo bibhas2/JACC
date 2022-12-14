@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <variant>
 #include <map>
 #include <vector>
 #include <string_view>
@@ -12,26 +13,14 @@ namespace jacc {
 		ERROR_SYNTAX
 	};
 
-	enum JSONType : char {
-		JSON_UNDEFINED,
-		JSON_STRING,
-		JSON_NUMBER,
-		JSON_OBJECT,
-		JSON_ARRAY,
-		JSON_BOOLEAN,
-		JSON_NULL
-	};
-	
+    struct JSON_UNDEFINED{};
+    struct JSON_NULL{};
+
 	struct JSONObject {
-		JSONType type = JSON_UNDEFINED;
-
-		std::string str;
-		double number = 0.0;
-		std::map<std::string, JSONObject>  object;
-		std::vector<JSONObject> array;
-		bool booleanValue = false;
-
+        std::variant<JSON_UNDEFINED, JSON_NULL, std::string, double, std::map<std::string, JSONObject>, std::vector<JSONObject>, bool> value;
+		
 		JSONObject();
+        JSONObject(JSON_NULL n);
 		JSONObject(std::string& s);
 		JSONObject(const char* s);
 		JSONObject(std::map<std::string, JSONObject>& o);
@@ -46,6 +35,20 @@ namespace jacc {
 		JSONObject& operator=(const JSONObject& other) = delete;
 
 		JSONObject& operator=(JSONObject&& other) noexcept;
+        
+        bool isUndefined();
+        bool isNull();
+        bool isString();
+        bool isNumber();
+        bool isObject();
+        bool isArray();
+        bool isBoolean();
+        
+        std::string& string();
+        double number();
+        std::map<std::string, JSONObject>& object();
+        std::vector<JSONObject>& array();
+        bool boolean();
 	};
 	
 	struct Reader
@@ -62,7 +65,6 @@ namespace jacc {
 		Reader& reader;
 		ErrorCode error_code = ERROR_NONE;
 		const char* error_message = nullptr;
-		JSONObject root;
 		std::string value_token;
 
 		Parser(Reader& r);
@@ -75,7 +77,7 @@ namespace jacc {
 		void save_error(ErrorCode code, const char* msg);
         uint16_t read_codepoint();
         unsigned long decode_utf16(uint16_t i1, uint16_t i2);
-		void parse();
+        JSONObject parse();
 		JSONObject parse_value();
 		JSONObject parse_array();
 		JSONObject parse_string();
